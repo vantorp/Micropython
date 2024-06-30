@@ -1,0 +1,28 @@
+from machine import Pin, ADC
+from time import sleep
+
+# Analog input for Light Dependent Resistor, a.k.a. photoresistor
+ldr = ADC(Pin(1))
+
+# This function maps a minimum and maximum input to an arbitrary scale,
+# needs real life calibration (and a better name than "interpol"??).
+# TODO: look up what "interpolation" actually means.
+# Either way, it returns a function intended to interpolate a raw input value,
+# preloaded with the ranges to minimize calculations when called.
+def make_interpol(from_min, from_max, to_min, to_max):
+    from_range = (from_max - from_min)
+    to_range = (to_max - to_min)
+    scale = float(to_range) / float(from_range)
+    def interpol(value):
+        return scale * (value - from_min) + to_min
+    return interpol
+
+# Uncomment for testing raw input range values.
+#print(f"Raw input value: {ldr.read()}")
+
+# Mapping raw input 240 to 4000 to the scale 1 to 10.
+light_interpol = make_interpol(400, 3700, 1, 10)
+
+while True:
+    print(f"{light_interpol(ldr.read())}")
+    sleep(0.5)
